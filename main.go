@@ -358,16 +358,6 @@ func (br BacktestResult) PrintExitReasonsAverage() {
 		strategyReport := s.StrategyReport()
 
 		// Exit signals report
-		tExits := table.NewWriter()
-		tExits.SetOutputMirror(os.Stdout)
-		tExits.AppendHeader(table.Row{"Exit Reason", "Exits", "Avg Profit %", "Tot Profit", "Tot Profit %", "Avg Duration", "StdDev Duration"})
-
-		tROIExits := table.NewWriter()
-		tROIExits.SetOutputMirror(os.Stdout)
-		tROIExits.AppendHeader(table.Row{"ROI exit Reason", "Exits", "Avg Profit %", "Tot Profit", "Tot Profit %", "Avg Duration", "StdDev Duration"})
-
-		appendRow(tExits, tROIExits, strategyReport.ExitReasonReports)
-
 		columnConfig := []table.ColumnConfig{
 			{Name: "Exits", Align: text.AlignRight},
 			{Name: "Avg Profit %", Align: text.AlignRight, Transformer: numberTransformer},
@@ -377,16 +367,25 @@ func (br BacktestResult) PrintExitReasonsAverage() {
 			{Name: "StdDev Duration", Align: text.AlignRight, Transformer: minuteDurationTransformer},
 		}
 
+		tExits := table.NewWriter()
+		tExits.SetOutputMirror(os.Stdout)
+		tExits.AppendHeader(table.Row{"Exit Reason", "Exits", "Avg Profit %", "Tot Profit", "Tot Profit %", "Avg Duration", "StdDev Duration"})
 		tExits.SetColumnConfigs(columnConfig)
 		tExits.SortBy([]table.SortBy{
 			{Name: "Exits", Mode: table.DscNumeric},
 		})
-		tExits.Render()
 
+		tROIExits := table.NewWriter()
+		tROIExits.SetOutputMirror(os.Stdout)
+		tROIExits.AppendHeader(table.Row{"ROI exit Reason", "Exits", "Avg Profit %", "Tot Profit", "Tot Profit %", "Avg Duration", "StdDev Duration"})
 		tROIExits.SetColumnConfigs(columnConfig)
 		tROIExits.SortBy([]table.SortBy{
 			{Name: "Exits", Mode: table.DscNumeric},
 		})
+
+		appendRow(tExits, tROIExits, strategyReport.ExitReasonReports)
+
+		tExits.Render()
 		tROIExits.Render()
 
 		// General metric report
