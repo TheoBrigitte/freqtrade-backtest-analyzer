@@ -345,10 +345,15 @@ func (br BacktestResult) PrintExitReasonsAverage() {
 			return fmt.Sprintf("%.3f %s", val, s.StakeCurrency)
 		}
 
+		// Sort ROI by value, so we can break down ROI exit by value.
+		// e.g. roi setting -> 0:0.1  60:0.02; 100 roi exits does not tell anything
+		//      but 80 exit >= 0.1 20  exit >= 0.02 tells how many exits per ROI setting
 		s.sortMinimalROI()
 
+		// Compute report
 		strategyReport := s.StrategyReport()
 
+		// Exit signals report
 		tExits := table.NewWriter()
 		tExits.SetOutputMirror(os.Stdout)
 		tExits.AppendHeader(table.Row{"Exit Reason", "Exits", "Avg Profit %", "Tot Profit", "Tot Profit %", "Avg Duration", "StdDev Duration"})
@@ -368,6 +373,7 @@ func (br BacktestResult) PrintExitReasonsAverage() {
 			{Name: "Exits", Mode: table.DscNumeric},
 		})
 
+		// General metric report
 		tMetrics := table.NewWriter()
 		tMetrics.SetOutputMirror(os.Stdout)
 		tMetrics.AppendHeader(table.Row{"Metric", "Value"})
