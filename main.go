@@ -313,9 +313,17 @@ func appendRow(t table.Writer, reports ExitReasonReports) {
 	}
 }
 func (br BacktestResult) PrintExitReasonsAverage() {
+	// Transformers used to display values
 	numberTransformer := text.NewNumberTransformer("%.2f")
-	durationTransformer := func(val interface{}) string {
+	minuteDurationTransformer := func(val interface{}) string {
 		d, err := time.ParseDuration(fmt.Sprintf("%vm", val))
+		if err != nil {
+			return "error"
+		}
+		return d.String()
+	}
+	secondDurationTransformer := func(val interface{}) string {
+		d, err := time.ParseDuration(fmt.Sprintf("%vs", val))
 		if err != nil {
 			return "error"
 		}
@@ -352,9 +360,10 @@ func (br BacktestResult) PrintExitReasonsAverage() {
 			{Name: "Avg Profit %", Align: text.AlignRight, Transformer: numberTransformer},
 			{Name: "Tot Profit", Align: text.AlignRight, Transformer: numberTransformer},
 			{Name: "Tot Profit %", Align: text.AlignRight, Transformer: numberTransformer},
-			{Name: "Avg Duration", Align: text.AlignRight, Transformer: durationTransformer},
-			{Name: "StdDev Duration", Align: text.AlignRight, Transformer: durationTransformer},
-		})
+			{Name: "Avg Duration", Align: text.AlignRight, Transformer: minuteDurationTransformer},
+			{Name: "StdDev Duration", Align: text.AlignRight, Transformer: minuteDurationTransformer},
+		}
+
 		tExits.SortBy([]table.SortBy{
 			{Name: "Exits", Mode: table.DscNumeric},
 		})
