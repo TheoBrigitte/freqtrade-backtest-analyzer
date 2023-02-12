@@ -54,8 +54,8 @@ type Strategy struct {
 	Losses int `json:"losses"`
 
 	HoldingAvgDuration float64 `json:"holding_avg_s"`
-	WinnderAvgDuration float64 `json:"winner_avg_s"`
-	LoserAvgDuration   float64 `json:"loser_avg_s"`
+	WinnderAvgDuration float64 `json:"winner_holding_avg_s"`
+	LoserAvgDuration   float64 `json:"loser_holding_avg_s"`
 
 	MinBalance         float64    `json:"csum_min"`
 	MaxBalance         float64    `json:"csum_max"`
@@ -387,6 +387,9 @@ func (br BacktestResult) PrintExitReasonsAverage() {
 		tMetrics.AppendRow([]interface{}{"Total profit Short %", percentageTransformer(s.ProfitTotalShort)})
 		tMetrics.AppendRow([]interface{}{"Absolute profit Long", priceTransformer(s.ProfitTotalLongAbs)})
 		tMetrics.AppendRow([]interface{}{"Absolute profit Short", priceTransformer(s.ProfitTotalShortAbs)})
+		tMetrics.AppendRow([]interface{}{"", ""})
+		tMetrics.AppendRow([]interface{}{"Avg. Duration Winners", secondDurationTransformer(s.WinnderAvgDuration)})
+		tMetrics.AppendRow([]interface{}{"Avg. Duration Loser", secondDurationTransformer(s.LoserAvgDuration)})
 		tMetrics.AppendRow([]interface{}{"", ""})
 		tMetrics.AppendRow([]interface{}{"Min balance", priceTransformer(s.MinBalance)})
 		tMetrics.AppendRow([]interface{}{"Max balance", priceTransformer(s.MaxBalance)})
