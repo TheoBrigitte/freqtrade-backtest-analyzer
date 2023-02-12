@@ -49,6 +49,25 @@ type Strategy struct {
 	ProfitTotalLongAbs  float64 `json:"profit_total_long_abs"`
 	ProfitTotalShortAbs float64 `json:"profit_total_short_abs"`
 
+	Wins   int `json:"wins"`
+	Draws  int `json:"draws"`
+	Losses int `json:"losses"`
+
+	HoldingAvgDuration float64 `json:"holding_avg_s"`
+	WinnderAvgDuration float64 `json:"winner_avg_s"`
+	LoserAvgDuration   float64 `json:"loser_avg_s"`
+
+	MinBalance         float64    `json:"csum_min"`
+	MaxBalance         float64    `json:"csum_max"`
+	DrawdownRelative   float64    `json:"max_relative_drawdown"`
+	DrawdownAbsAccount float64    `json:"max_drawdown_account"`
+	DrawdownAbs        float64    `json:"max_drawdown_abs"`
+	DrawdownHigh       float64    `json:"max_drawdown_high"`
+	DrawdownLow        float64    `json:"max_drawdown_low"`
+	DrawdownStart      CustomTime `json:"drawdown_start"`
+	DrawdownEnd        CustomTime `json:"drawdown_end"`
+	MarketChange       float64    `json:"market_change"`
+
 	// Trading information
 	Trades []Trade `json:"trades"`
 
@@ -340,33 +359,45 @@ func (br BacktestResult) PrintExitReasonsAverage() {
 		tMetrics := table.NewWriter()
 		tMetrics.SetOutputMirror(os.Stdout)
 		tMetrics.AppendHeader(table.Row{"Metric", "Value"})
+		tMetrics.AppendRow([]interface{}{"Strategy", strategyName})
+		tMetrics.AppendRow([]interface{}{"Minimal ROI", s.MinimalROISorted.String()})
+		tMetrics.AppendRow([]interface{}{"", ""})
 		tMetrics.AppendRow([]interface{}{"Backtest from", s.BacktestStart})
 		tMetrics.AppendRow([]interface{}{"Backtest to", s.BacktestEnd})
 		tMetrics.AppendRow([]interface{}{"Max open trades", s.MaxOpenTrades})
-		tMetrics.AppendRow([]interface{}{"Minimal ROI", s.MinimalROISorted.String()})
 		tMetrics.AppendRow([]interface{}{"", ""})
-		tMetrics.AppendRow([]interface{}{"Strategy", strategyName})
 		tMetrics.AppendRow([]interface{}{"Total/Daily Avg Trades", fmt.Sprintf("%d / %.2f", s.TotalTrades, float64(s.TotalTrades)/float64(s.BacktestDays))})
-		tMetrics.AppendRow([]interface{}{"Starting balance", fmt.Sprintf("%.3f %s", s.StartingBalance, s.StakeCurrency)})
-		tMetrics.AppendRow([]interface{}{"Final balance", fmt.Sprintf("%.3f %s", s.FinalBalance, s.StakeCurrency)})
-		tMetrics.AppendRow([]interface{}{"Absolute profit", fmt.Sprintf("%.3f %s", s.ProfitTotalAbs, s.StakeCurrency)})
-		tMetrics.AppendRow([]interface{}{"Total profit %", fmt.Sprintf("%.2f%%", s.ProfitTotal*100)})
-		tMetrics.AppendRow([]interface{}{"CAGR %", fmt.Sprintf("%.2f%%", s.CAGR*100)})
-		tMetrics.AppendRow([]interface{}{"Sortino", fmt.Sprintf("%.2f", s.Sortino)})
-		tMetrics.AppendRow([]interface{}{"Sharpe", fmt.Sprintf("%.2f", s.Sharpe)})
-		tMetrics.AppendRow([]interface{}{"Calmar", fmt.Sprintf("%.2f", s.Calmar)})
-		tMetrics.AppendRow([]interface{}{"Profit factor", fmt.Sprintf("%.2f", s.ProfitFactor)})
-		tMetrics.AppendRow([]interface{}{"Expectancy", fmt.Sprintf("%.2f", s.Expectancy)})
-		tMetrics.AppendRow([]interface{}{"Trades per day", fmt.Sprintf("%.2f", s.TradesPerDay)})
+		tMetrics.AppendRow([]interface{}{"Starting balance", priceTransformer(s.StartingBalance)})
+		tMetrics.AppendRow([]interface{}{"Final balance", priceTransformer(s.FinalBalance)})
+		tMetrics.AppendRow([]interface{}{"Absolute profit", priceTransformer(s.ProfitTotalAbs)})
+		tMetrics.AppendRow([]interface{}{"Total profit %", percentageTransformer(s.ProfitTotal)})
+		tMetrics.AppendRow([]interface{}{"CAGR %", percentageTransformer(s.CAGR)})
+		tMetrics.AppendRow([]interface{}{"Sortino", floatTransformer(s.Sortino)})
+		tMetrics.AppendRow([]interface{}{"Sharpe", floatTransformer(s.Sharpe)})
+		tMetrics.AppendRow([]interface{}{"Calmar", floatTransformer(s.Calmar)})
+		tMetrics.AppendRow([]interface{}{"Profit factor", floatTransformer(s.ProfitFactor)})
+		tMetrics.AppendRow([]interface{}{"Expectancy", floatTransformer(s.Expectancy)})
+		tMetrics.AppendRow([]interface{}{"Trades per day", floatTransformer(s.TradesPerDay)})
 		tMetrics.AppendRow([]interface{}{"Avg. daily profit %", fmt.Sprintf("%.2f", float64(s.ProfitTotal*100)/float64(s.BacktestDays))})
-		tMetrics.AppendRow([]interface{}{"Avg. stake amount", fmt.Sprintf("%.3f %s", s.AvgStakeAmount, s.StakeCurrency)})
-		tMetrics.AppendRow([]interface{}{"Total trade volume", fmt.Sprintf("%.3f %s", s.TotalVolume, s.StakeCurrency)})
+		tMetrics.AppendRow([]interface{}{"Avg. stake amount", priceTransformer(s.AvgStakeAmount)})
+		tMetrics.AppendRow([]interface{}{"Total trade volume", priceTransformer(s.TotalVolume)})
 		tMetrics.AppendRow([]interface{}{"", ""})
-		tMetrics.AppendRow([]interface{}{"Long / Short", fmt.Sprintf("%d %d", s.TradeCountLong, s.TradeCountShort)})
-		tMetrics.AppendRow([]interface{}{"Total profit Long %", fmt.Sprintf("%.2f%%", s.ProfitTotalLong*100)})
-		tMetrics.AppendRow([]interface{}{"Total profit Short %", fmt.Sprintf("%.2f%%", s.ProfitTotalShort*100)})
-		tMetrics.AppendRow([]interface{}{"Absolute profit Long", fmt.Sprintf("%.3f %s", s.ProfitTotalLongAbs, s.StakeCurrency)})
-		tMetrics.AppendRow([]interface{}{"Absolute profit Short", fmt.Sprintf("%.3f %s", s.ProfitTotalShortAbs, s.StakeCurrency)})
+		tMetrics.AppendRow([]interface{}{"Long / Short", fmt.Sprintf("%d / %d", s.TradeCountLong, s.TradeCountShort)})
+		tMetrics.AppendRow([]interface{}{"Total profit Long %", percentageTransformer(s.ProfitTotalLong)})
+		tMetrics.AppendRow([]interface{}{"Total profit Short %", percentageTransformer(s.ProfitTotalShort)})
+		tMetrics.AppendRow([]interface{}{"Absolute profit Long", priceTransformer(s.ProfitTotalLongAbs)})
+		tMetrics.AppendRow([]interface{}{"Absolute profit Short", priceTransformer(s.ProfitTotalShortAbs)})
+		tMetrics.AppendRow([]interface{}{"", ""})
+		tMetrics.AppendRow([]interface{}{"Min balance", priceTransformer(s.MinBalance)})
+		tMetrics.AppendRow([]interface{}{"Max balance", priceTransformer(s.MaxBalance)})
+		tMetrics.AppendRow([]interface{}{"Max % of account underwater", percentageTransformer(s.DrawdownRelative)})
+		tMetrics.AppendRow([]interface{}{"Absolute Drawdown (Account)", percentageTransformer(s.DrawdownAbsAccount)})
+		tMetrics.AppendRow([]interface{}{"Absolute Drawdown", priceTransformer(s.DrawdownAbs)})
+		tMetrics.AppendRow([]interface{}{"Drawdown high", priceTransformer(s.DrawdownHigh)})
+		tMetrics.AppendRow([]interface{}{"Drawdown low", priceTransformer(s.DrawdownLow)})
+		tMetrics.AppendRow([]interface{}{"Drawdown Start", s.DrawdownStart})
+		tMetrics.AppendRow([]interface{}{"Drawdown End", s.DrawdownEnd})
+		tMetrics.AppendRow([]interface{}{"Market change", percentageTransformer(s.MarketChange)})
 
 		tExits.Render()
 		tMetrics.Render()
