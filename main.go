@@ -232,14 +232,17 @@ func (ers *ExitReasonReports) Compute() {
 func (s *Strategy) sortMinimalROI() {
 	keys := make([]string, 0, len(s.MinimalROI))
 
+	// get keys
 	for key := range s.MinimalROI {
 		keys = append(keys, key)
 	}
 
+	// sort keys using values
 	sort.SliceStable(keys, func(i, j int) bool {
 		return s.MinimalROI[keys[i]] > s.MinimalROI[keys[j]]
 	})
 
+	// rebuild slice
 	var sortedMinimalROI MinimalROISorted
 	for _, k := range keys {
 		sortedMinimalROI = append(sortedMinimalROI, MinimalROI{
