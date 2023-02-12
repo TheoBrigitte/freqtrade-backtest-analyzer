@@ -295,12 +295,26 @@ func (br BacktestResult) PrintExitReasonsAverage() {
 	durationTransformer := func(val interface{}) string {
 		d, err := time.ParseDuration(fmt.Sprintf("%vm", val))
 		if err != nil {
-			return "0"
+			return "error"
 		}
 		return d.String()
 	}
+	percentageTransformer := func(val interface{}) string {
+		v, ok := val.(float64)
+		if !ok {
+			return "error"
+		}
+		return fmt.Sprintf("%.2f%%", v*100)
+	}
+	floatTransformer := func(val interface{}) string {
+		return fmt.Sprintf("%.2f", val)
+	}
 
 	for strategyName, s := range br.Strategy {
+		priceTransformer := func(val interface{}) string {
+			return fmt.Sprintf("%.3f %s", val, s.StakeCurrency)
+		}
+
 		s.sortMinimalROI()
 
 		strategyReport := s.StrategyReport()
