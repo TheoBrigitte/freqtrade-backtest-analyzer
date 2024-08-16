@@ -1,4 +1,4 @@
-module github.com/TheoBrigitte/backtest-analyzer
+module github.com/TheoBrigitte/freqtrade-backtest-analyzer
 
 go 1.19
 

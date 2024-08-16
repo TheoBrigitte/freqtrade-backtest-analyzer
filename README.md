@@ -1,4 +1,4 @@
-# backtest analyzer
+# freqtrade backtest analyzer
 
 CLI tool to analyze Freqtrade backtesting results.
 
