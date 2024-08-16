@@ -75,6 +75,7 @@ type Strategy struct {
 	MaxOpenTrades int                `json:"max_open_trades"`
 	MinimalROI    map[string]float64 `json:"minimal_roi"`
 	StakeCurrency string             `json:"stake_currency"`
+	Stoploss      float64            `json:"stoploss"`
 
 	// Custom fields
 	MinimalROISorted MinimalROISorted
@@ -388,12 +389,32 @@ func (br BacktestResult) PrintExitReasonsAverage() {
 		tExits.Render()
 		tROIExits.Render()
 
+		// Win loss report
+		tWinLoss := table.NewWriter()
+		tWinLoss.SetOutputMirror(os.Stdout)
+		tWinLoss.SetColumnConfigs([]table.ColumnConfig{
+			{Name: "Entries", Align: text.AlignRight},
+			{Name: "Avg Profit %", Align: text.AlignRight, Transformer: floatTransformer},
+			{Name: "Cum Profit", Align: text.AlignRight, Transformer: floatTransformer},
+			{Name: "Tot Profit USDT", Align: text.AlignRight, Transformer: priceTransformer},
+			{Name: "Tot Profit %", Align: text.AlignRight, Transformer: percentageTransformer},
+			{Name: "Avg Duration", Align: text.AlignRight, Transformer: secondDurationTransformer},
+			{Name: "Wins", Align: text.AlignRight},
+			{Name: "Draws", Align: text.AlignRight},
+			{Name: "Loss", Align: text.AlignRight},
+			{Name: "Win %", Align: text.AlignRight, Transformer: percentageTransformer},
+		})
+		tWinLoss.AppendHeader(table.Row{"TAG", "Entries", "Avg Profit %", "Cum Profit", "Tot Profit USDT", "Tot Profit %", "Avg Duration", "Win", "Draws", "Loss", "Win %"})
+		tWinLoss.AppendRow([]interface{}{"TOTAL", s.TotalTrades, s.ProfitTotalAbs / float64(s.TotalTrades), 0.0, s.ProfitTotalAbs, s.ProfitTotal, s.HoldingAvgDuration, s.Wins, s.Draws, s.Losses, float64(s.Wins) / float64(s.TotalTrades)})
+		tWinLoss.Render()
+
 		// General metric report
 		tMetrics := table.NewWriter()
 		tMetrics.SetOutputMirror(os.Stdout)
 		tMetrics.AppendHeader(table.Row{"Metric", "Value"})
 		tMetrics.AppendRow([]interface{}{"Strategy", strategyName})
 		tMetrics.AppendRow([]interface{}{"Minimal ROI", s.MinimalROISorted.String()})
+		tMetrics.AppendRow([]interface{}{"Stoploss", fmt.Sprintf("%.4f", s.Stoploss)})
 		tMetrics.AppendRow([]interface{}{"", ""})
 		tMetrics.AppendRow([]interface{}{"Backtest from", s.BacktestStart})
 		tMetrics.AppendRow([]interface{}{"Backtest to", s.BacktestEnd})
