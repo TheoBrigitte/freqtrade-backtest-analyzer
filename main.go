@@ -33,6 +33,7 @@ type Strategy struct {
 	FinalBalance        float64 `json:"final_balance"`
 	ProfitTotalAbs      float64 `json:"profit_total_abs"`
 	ProfitTotal         float64 `json:"profit_total"`
+	ProfitMean          float64 `json:"profit_mean"`
 	ProfitFactor        float64 `json:"profit_factor"`
 	CAGR                float64 `json:"cagr"`
 	Sortino             float64 `json:"sortino"`
@@ -425,6 +426,7 @@ func (br BacktestResult) PrintExitReasonsAverage() {
 		tMetrics.AppendRow([]interface{}{"Final balance", priceTransformer(s.FinalBalance)})
 		tMetrics.AppendRow([]interface{}{"Absolute profit", priceTransformer(s.ProfitTotalAbs)})
 		tMetrics.AppendRow([]interface{}{"Total profit %", percentageTransformer(s.ProfitTotal)})
+		tMetrics.AppendRow([]interface{}{"Avg profit %", percentageTransformer(s.ProfitMean)})
 		tMetrics.AppendRow([]interface{}{"CAGR %", percentageTransformer(s.CAGR)})
 		tMetrics.AppendRow([]interface{}{"Sortino", floatTransformer(s.Sortino)})
 		tMetrics.AppendRow([]interface{}{"Sharpe", floatTransformer(s.Sharpe)})
